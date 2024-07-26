@@ -81,7 +81,7 @@ namespace DJ_ModPackCreator
             BtnCreateModPack = new Button();
             BtnCreateNewBlock = new Button();
             label13 = new Label();
-            comboBox1 = new ComboBox();
+            ComboAssemblyMode = new ComboBox();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PictureAtlas).BeginInit();
             GroupBlockCreator.SuspendLayout();
@@ -152,6 +152,7 @@ namespace DJ_ModPackCreator
             BtnLoadAtlas.TabIndex = 10;
             BtnLoadAtlas.Text = "Load";
             BtnLoadAtlas.UseVisualStyleBackColor = false;
+            BtnLoadAtlas.Click += BtnLoadAtlas_Click;
             // 
             // PictureAtlas
             // 
@@ -535,6 +536,7 @@ namespace DJ_ModPackCreator
             BtnUpdateBlockPreView.TabIndex = 1;
             BtnUpdateBlockPreView.Text = "Update";
             BtnUpdateBlockPreView.UseVisualStyleBackColor = false;
+            BtnUpdateBlockPreView.Click += BtnUpdateBlockPreView_Click;
             // 
             // PicturePreViewBlock
             // 
@@ -575,6 +577,7 @@ namespace DJ_ModPackCreator
             BtnCreateModPack.TabIndex = 9;
             BtnCreateModPack.Text = "Создать Zip";
             BtnCreateModPack.UseVisualStyleBackColor = false;
+            BtnCreateModPack.Click += BtnCreateModPack_Click;
             // 
             // BtnCreateNewBlock
             // 
@@ -590,21 +593,21 @@ namespace DJ_ModPackCreator
             // label13
             // 
             label13.AutoSize = true;
-            label13.Location = new Point(654, 12);
+            label13.Location = new Point(640, 12);
             label13.Name = "label13";
             label13.Size = new Size(83, 26);
             label13.TabIndex = 11;
             label13.Text = "Сборка:";
             // 
-            // comboBox1
+            // ComboAssemblyMode
             // 
-            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Items.AddRange(new object[] { "Development", "Release" });
-            comboBox1.Location = new Point(743, 9);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(146, 34);
-            comboBox1.TabIndex = 12;
+            ComboAssemblyMode.DropDownStyle = ComboBoxStyle.DropDownList;
+            ComboAssemblyMode.FormattingEnabled = true;
+            ComboAssemblyMode.Items.AddRange(new object[] { "Development", "Release" });
+            ComboAssemblyMode.Location = new Point(729, 9);
+            ComboAssemblyMode.Name = "ComboAssemblyMode";
+            ComboAssemblyMode.Size = new Size(160, 34);
+            ComboAssemblyMode.TabIndex = 12;
             // 
             // General
             // 
@@ -612,7 +615,7 @@ namespace DJ_ModPackCreator
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.Black;
             ClientSize = new Size(901, 620);
-            Controls.Add(comboBox1);
+            Controls.Add(ComboAssemblyMode);
             Controls.Add(label13);
             Controls.Add(BtnCreateNewBlock);
             Controls.Add(BtnCreateModPack);
@@ -692,7 +695,7 @@ namespace DJ_ModPackCreator
         private Label label12;
         private Button BtnCreateNewBlock;
         private Label label13;
-        private ComboBox comboBox1;
+        private ComboBox ComboAssemblyMode;
         private Label label14;
         private TextBox InpBreakLvl;
         private Button BtnAppendDefoaltTag;

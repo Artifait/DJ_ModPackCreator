@@ -55,7 +55,7 @@ namespace DJ_ModPackCreator
     public class Block
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; } = "NoName";
         public float Durability { get; set; } = 1;
         public int BreakLvl { get; set; } = 1;
 

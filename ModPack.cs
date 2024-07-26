@@ -9,6 +9,9 @@ namespace DJ_ModPackCreator
 
         public static string SerializeModPack(ModPack modPack, bool Release)
         {
+            modPack.Blocks.Sort((left, right) => left.Name.CompareTo(right.Name));
+            for (int i = 0; i < modPack.Blocks.Count; i++) modPack.Blocks[i].Id = i;
+
             JsonSerializerOptions options = new()
             {
                 WriteIndented = !Release

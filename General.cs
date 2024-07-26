@@ -1,4 +1,9 @@
 using Newtonsoft.Json;
+using System.Diagnostics;
+using System.Drawing.Drawing2D;
+using System.IO;
+using System.IO.Compression;
+
 
 namespace DJ_ModPackCreator
 {
@@ -8,6 +13,8 @@ namespace DJ_ModPackCreator
 
         private ModPack? ModPackNow = null;
         private Block? BlockNow = null;
+        private Image? AtlasTexture = null;
+
         private int IdEditBlock
         {
             get { return _IdEditBlock; }
@@ -17,7 +24,7 @@ namespace DJ_ModPackCreator
                 _IdEditBlock = value;
             }
         }
-        private string FilePath = "iniFile.json";
+        private string FilePath = "AppConfig.json";
         private Dictionary<string, bool> TagsOnBlock = [];
 
         public General()
@@ -62,22 +69,14 @@ namespace DJ_ModPackCreator
         }
         private void SetActiveBlockCreator(bool active)
         {
-            InpAtlasOffset.Enabled = active;
-            InpBlockName.Enabled = active;
-            InpDurability.Enabled = active;
-            InpBreakLvl.Enabled = active;
-            InpTextureSize.Enabled = active;
-            InpAtlasOffset.Enabled = active;
-            InpMultAxe.Enabled = active;
-            InpMultHoe.Enabled = active;
-            InpMultSword.Enabled = active;
-            InpMultOther.Enabled = active;
-            InpMultShovel.Enabled = active;
-            InpMultPickAxe.Enabled = active;
-            BtnAppendDefoaltTag.Enabled = active;
-            BtnAppendTag.Enabled = active;
-            BtnDeleteTag.Enabled = active;
-            ComboBoxOfDefoaltTag.Enabled = active;
+            InpAtlasOffset.Enabled = active; InpBlockName.Enabled = active;
+            InpDurability.Enabled = active; InpBreakLvl.Enabled = active;
+            InpTextureSize.Enabled = active; InpAtlasOffset.Enabled = active;
+            InpMultAxe.Enabled = active; InpMultHoe.Enabled = active;
+            InpMultSword.Enabled = active; InpMultOther.Enabled = active;
+            InpMultShovel.Enabled = active; InpMultPickAxe.Enabled = active;
+            BtnAppendDefoaltTag.Enabled = active; BtnAppendTag.Enabled = active;
+            BtnDeleteTag.Enabled = active; ComboBoxOfDefoaltTag.Enabled = active;
         }
         private void LoadDataToBlockCreator()
         {
@@ -104,25 +103,22 @@ namespace DJ_ModPackCreator
         }
         private void ClearBlockCreator()
         {
-            if (BlockNow != null)
-            {
-                InpAtlasOffset.Text = string.Empty;
-                InpBlockName.Text = string.Empty;
-                InpDurability.Text = string.Empty;
-                InpBreakLvl.Text = string.Empty;
+            InpAtlasOffset.Text = string.Empty;
+            InpBlockName.Text = string.Empty;
+            InpDurability.Text = string.Empty;
+            InpBreakLvl.Text = string.Empty;
 
-                InpTextureSize.Text = string.Empty;
-                InpAtlasOffset.Text = string.Empty;
+            InpTextureSize.Text = string.Empty;
+            InpAtlasOffset.Text = string.Empty;
 
-                InpMultAxe.Text = string.Empty;
-                InpMultHoe.Text = string.Empty;
-                InpMultSword.Text = string.Empty;
-                InpMultOther.Text = string.Empty;
-                InpMultShovel.Text = string.Empty;
-                InpMultPickAxe.Text = string.Empty;
+            InpMultAxe.Text = string.Empty;
+            InpMultHoe.Text = string.Empty;
+            InpMultSword.Text = string.Empty;
+            InpMultOther.Text = string.Empty;
+            InpMultShovel.Text = string.Empty;
+            InpMultPickAxe.Text = string.Empty;
 
-                ListOfTag.Items.Clear();
-            }
+            ListOfTag.Items.Clear();
         }
         private void LoadDataToBlock()
         {
@@ -149,9 +145,10 @@ namespace DJ_ModPackCreator
         private void ListOfBlock_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (ListOfBlock.SelectedIndex == -1) return;
-            if(ListOfBlock.SelectedIndex == IdEditBlock) return;
+            if (ListOfBlock.SelectedIndex == IdEditBlock) return;
             SaveCurrentBlock();
             LoadDataFromListToBlockCreator();
+            BtnUpdateBlockPreView_Click(sender, e);
         }
 
 
@@ -221,13 +218,129 @@ namespace DJ_ModPackCreator
 
         private void BtnDeleteTag_Click(object sender, EventArgs e)
         {
-            if (ListOfTag.SelectedIndex == -1) 
+            if (ListOfTag.SelectedIndex == -1)
                 return;
 
             string choisedTag = (string)GetSelected(ListOfTag);
 
             ListOfTag.Items.RemoveAt(ListOfTag.SelectedIndex);
             TagsOnBlock.Remove(choisedTag);
+        }
+
+        private void BtnLoadAtlas_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Файлы PNG (*.png)|*.png";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string selectedFilePath = openFileDialog.FileName;
+                AtlasTexture = Image.FromFile(selectedFilePath);
+
+                Bitmap bitmap = new Bitmap(PictureAtlas.Width, PictureAtlas.Height);
+
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
+
+                    g.DrawImage(AtlasTexture, new Rectangle(0, 0, PictureAtlas.Width, PictureAtlas.Height));
+                }
+
+                PictureAtlas.Image = bitmap;
+                PictureAtlas.SizeMode = PictureBoxSizeMode.Normal;
+            }
+        }
+
+        private void BtnUpdateBlockPreView_Click(object sender, EventArgs e)
+        {
+            if (AtlasTexture == null)
+            {
+                MessageBox.Show("Сначала загрузите изображение в PictureAtlas.", "Ошибка загрузки PreViewBlock", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            v2f atlasOffset = GetAtlasOffset();
+            v2f textureSize = GetTextureSize();
+
+            int offsetX = (int)atlasOffset.X;
+            int offsetY = (int)atlasOffset.Y;
+            int width = (int)textureSize.X;
+            int height = (int)textureSize.Y;
+
+            if (offsetX < 0 && offsetY < 0)
+            {
+                MessageBox.Show("Смещение не может отрицательно.");
+                return;
+            }
+            if (width < 0 && height < 0)
+            {
+                MessageBox.Show("Размер текстуры не может отрицательным.");
+                return;
+            }
+
+            Bitmap previewBitmap = new Bitmap(PicturePreViewBlock.Width, PicturePreViewBlock.Height);
+
+            using (Graphics g = Graphics.FromImage(previewBitmap))
+            {
+                g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                g.PixelOffsetMode = PixelOffsetMode.Half;
+
+                Rectangle sourceRect = new(offsetX, offsetY, width, height);
+                Rectangle destRect = new(0, 0, PicturePreViewBlock.Width, PicturePreViewBlock.Height);
+
+                g.DrawImage(AtlasTexture, destRect, sourceRect, GraphicsUnit.Pixel);
+            }
+
+            PicturePreViewBlock.Image = previewBitmap;
+            PicturePreViewBlock.SizeMode = PictureBoxSizeMode.Normal;
+        }
+
+        private v2f GetAtlasOffset() => v2f.Parse(InpAtlasOffset.Text, ',');
+        private v2f GetTextureSize() => v2f.Parse(InpTextureSize.Text, ',');
+
+        private void BtnCreateModPack_Click(object sender, EventArgs e)
+        {
+            if(string.IsNullOrWhiteSpace(InpNameMode.Text)) 
+            {
+                MessageBox.Show("Название мода инvalid");
+                return;
+            }
+            if (AtlasTexture == null)
+            {
+                MessageBox.Show("Атлас текстур ОБЯЗАТЕЛЕН.");
+                return;
+            }
+
+            ModPack modPack = new()
+            {
+                ModPackName = InpNameMode.Text,
+                Blocks = ListOfBlock.Items.OfType<Block>().ToList()
+            };
+
+            string modPacksPath = Path.Combine(Directory.GetCurrentDirectory(), "ModPacks");
+
+            if (!Directory.Exists(modPacksPath))
+                Directory.CreateDirectory(modPacksPath);
+            
+
+            string zipPath = $"ModPacks/{modPack.ModPackName}_Mod.zip";
+            string jsonModPack = ModPack.SerializeModPack(modPack, ComboAssemblyMode.Text == "Release");
+            
+            using (ZipArchive archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+            {
+                byte[] jsonBytes = System.Text.Encoding.UTF8.GetBytes(jsonModPack);
+                using (Stream jsonStream = archive.CreateEntry("ModPackData.json").Open())
+                {   
+                    jsonStream.Write(jsonBytes, 0, jsonBytes.Length);
+                }
+
+                using (Stream imageStream = archive.CreateEntry("AtlasTexture.png").Open())
+                {
+                    AtlasTexture.Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+                }
+            }
+            Process.Start("explorer.exe", modPacksPath);
         }
     }
 }
